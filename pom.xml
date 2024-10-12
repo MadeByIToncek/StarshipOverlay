@@ -19,7 +19,11 @@
             <artifactId>javalin</artifactId>
             <version>6.2.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.github.weisj</groupId>
+            <artifactId>darklaf-core</artifactId>
+            <version>3.0.2</version>
+        </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -66,4 +70,8 @@
             </plugin>
         </plugins>
     </build>
+    <packaging>pom</packaging>
+    <modules>
+        <module>TwinklyController</module>
+    </modules>
 </project>

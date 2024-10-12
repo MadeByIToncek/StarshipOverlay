@@ -1,9 +1,10 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
-<div class="slide-in from-right">
-    <div class="slide-in-content">
-        <p class="text" id="timer">Loading...</p>
-    </div>
+<div class="clockbox">
+    <p class="clocktext" id="clock">Loading...</p>
+</div>
+<div class="timebox">
+    <p class="timetext" id="timer">Loading...</p>
 </div>
 
 <style>
@@ -12,85 +13,78 @@
         src: url('./vcr.ttf');
     }
     
-    .text {
+    .timetext {
         padding: 20px;
         background: rgb(0, 163, 224);
         font-family: "vcr-osd-mono";
         font-size: 52pt;
+        text-align: right;
         color: #fff;
     }
     
-    .slide-in {
+    .clocktext {
+        padding: 20px;
+        background: rgb(0, 163, 224);
+        font-family: "vcr-osd-mono";
+        font-size: 30pt;
+        color: #fff;
+    }
+    
+    .clockbox {
         /* to position it in front of the other content */
         position: absolute;
         z-index: 10;
         overflow: hidden;
+        top: -20px;
+        right: 30px;
         /* to prevent scrollbar appearing */
     }
     
-    .slide-in.from-left {
-        left: 10px;
-    }
-    
-    .slide-in.from-right {
-        top: -30px;
+    .timebox {
+        /* to position it in front of the other content */
+        position: absolute;
+        z-index: 10;
+        overflow: hidden;
+        top: 50px;
         right: 30px;
-    }
-    
-    .slide-in-content {
-        padding: 0px;
-        transition: transform .5s ease;
-        /* our nice transition */
-    }
-    
-    .slide-in.from-left .slide-in-content {
-        transform: translateX(-100%);
-        -webkit-transform: translateX(-100%);
-    }
-    
-    .slide-in.from-right .slide-in-content {
-        transform: translateX(100%);
-        -webkit-transform: translateX(100%);
-    }
-    
-    .slide-in.show .slide-in-content {
-        transform: translateX(0);
-        -webkit-transform: translateX(0);
+        /* to prevent scrollbar appearing */
     }
 </style>
 
 <script>
     // Set the date we're counting down to
     var allowedToRead = true;
+    var target = new Date();
+    var x;
 
-    function play() {
-        $('.slide-in').toggleClass('show');
-    }
-
-    function next() {}
-
-    function stop() {
-        $('.slide-in').toggleClass('show');
-    }
-
-    function remove() {}
-
-    function handleError(e) {
-        console.error(e)
-    }
-
-    function handleWarning(w) {
-        console.log(w)
-    }
-
+    updateT0Controller();
+    var y = setInterval(updateT0Controller, 5000);
 
     // Update the count down every 1 second
-    var x = setInterval(function() {
+
+    function denullify(n) {
+        return String(n).padStart(2, '0');
+    }
+
+    function updateT0Controller() {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                console.log(xmlHttp.responseText);
+                target = new Date(xmlHttp.responseText);
+                if (x == null) x = setInterval(countdown, 100);
+            };
+        }
+        xmlHttp.open("GET", "/api/t0", true); // true for asynchronous 
+        xmlHttp.send(null);
+    }
+
+    function countdown() {
         // Get today's date and time
         var now = new Date();
 
         // Find the distance between now and the count down date
-        var distance = new Date('2024/10/13 08:00:00').getTime() - now.getTime();
+        var distance = target.getTime() - now.getTime();
 
         // Time calculations for days, hours, minutes and seconds
         var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)) + (Math.floor(distance / (1000 * 60 * 60 * 24)) * 24);
@@ -99,18 +93,30 @@
 
 
         // Display the result in the element with id="demo"
-        document.getElementById("timer").innerHTML = "T- " + denullify(hours) + ":" + denullify(minutes) + ":" + denullify(seconds);
-    }, 1000);
-
-    function denullify(input) {
-        if (input >= 0 && input < 10) {
-            return "0" + input;
-        } else if (input > -10 && input < 0) {
-            return "-0" + (input * -1);
+        if (hours > 0) {
+            document.getElementById("timer").innerHTML = "T- " + denullify(hours) + ":" + denullify(minutes) + ":" + denullify(seconds);
         } else {
-            return input;
+            document.getElementById("timer").innerHTML = "T+ " + denullify(-hours) + ":" + denullify(-minutes) + ":" + denullify(-seconds);
         }
+        var cz = convertTZ(now, "Europe/Prague");
+        var tx = convertTZ(now, "America/Chicago");
+        document.getElementById("clock").innerHTML = denullify(cz.getHours()) + ":" + denullify(cz.getMinutes()) + ":" + denullify(cz.getSeconds()) + " CZ // " + denullify(tx.getHours()) + ":" + denullify(tx.getMinutes()) + ":" + denullify(tx.getSeconds()) + " TX";
     }
 
-    play();
+    function convertTZ(date, tzString) {
+        return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {
+            timeZone: tzString
+        }));
+    }
+
+    // usage: Asia/Jakarta is GMT+7
+    convertTZ("2012/04/20 10:10:30 +0000", "Asia/Jakarta") // Tue Apr 20 2012 17:10:30 GMT+0700 (Western Indonesia Time)
+
+    // Resulting value is regular Date() object
+    const convertedDate = convertTZ("2012/04/20 10:10:30 +0000", "Asia/Jakarta")
+    convertedDate.getHours(); // 17
+
+    // Bonus: You can also put Date object to first arg
+    const date = new Date()
+    convertTZ(date, "Asia/Jakarta") // current date-time in jakarta.
 </script>

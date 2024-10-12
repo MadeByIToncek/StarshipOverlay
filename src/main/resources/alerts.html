@@ -1,0 +1,70 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+<div class="slide-in from-right">
+    <div class="slide-in-content">
+        <p class="text" id="timer">Loading...</p>
+    </div>
+</div>
+
+<style>
+    @font-face {
+        font-family: "vcr-osd-mono";
+        src: url('./vcr.ttf');
+    }
+    
+    .text {
+        padding: 20px;
+        background: rgb(0, 163, 224);
+        font-family: "vcr-osd-mono";
+        font-size: 52pt;
+        color: #fff;
+    }
+    
+    .slide-in {
+        /* to position it in front of the other content */
+        position: absolute;
+        z-index: 10;
+        overflow: hidden;
+        /* to prevent scrollbar appearing */
+    }
+    
+    .slide-in.from-left {
+        left: 10px;
+    }
+    
+    .slide-in.from-right {
+        top: -30px;
+        right: 30px;
+    }
+    
+    .slide-in-content {
+        padding: 0px;
+        transition: transform .5s ease;
+        /* our nice transition */
+    }
+    
+    .slide-in.from-left .slide-in-content {
+        transform: translateX(-100%);
+        -webkit-transform: translateX(-100%);
+    }
+    
+    .slide-in.from-right .slide-in-content {
+        transform: translateX(100%);
+        -webkit-transform: translateX(100%);
+    }
+    
+    .slide-in.show .slide-in-content {
+        transform: translateX(0);
+        -webkit-transform: translateX(0);
+    }
+</style>
+
+<script>
+    function play() {
+        $('.slide-in').toggleClass('show');
+    }
+
+    function stop() {
+        $('.slide-in').toggleClass('show');
+    }
+</script>
