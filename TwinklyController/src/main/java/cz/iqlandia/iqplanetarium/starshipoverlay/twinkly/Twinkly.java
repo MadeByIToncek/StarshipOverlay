@@ -4,6 +4,7 @@ import cz.iqlandia.iqplanetarium.starshipoverlay.twinkly.data.Mode;
 import org.json.JSONObject;
 
 import java.awt.Color;
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -12,20 +13,24 @@ import java.net.http.HttpResponse;
 import java.util.Base64;
 import java.util.Random;
 
-public class Twinkly {
+public class Twinkly implements Closeable {
 	private final String baseAddress;
+	private boolean active = false;
 	private byte[] token;
 	private final HttpClient client;
 
 	public Twinkly(String baseAddress) {
 		this.baseAddress = baseAddress;
-		client = HttpClient.newHttpClient();
+		client = HttpClient.newBuilder()
+				.version(HttpClient.Version.HTTP_1_1)
+				.build();
 	}
 
 	public boolean login() throws IOException, InterruptedException {
+		String body = new JSONObject().put("challenge", getChallenge()).toString();
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(URI.create(baseAddress + "/xled/v1/login"))
-				.POST(HttpRequest.BodyPublishers.ofString(new JSONObject().put("challenge", getChallenge()).toString(4)))
+				.POST(HttpRequest.BodyPublishers.ofString(body))
 				.build();
 
 		HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -41,10 +46,12 @@ public class Twinkly {
 				.build();
 
 		HttpResponse<Void> resp2 = client.send(request, HttpResponse.BodyHandlers.discarding());
-		return resp2.statusCode() == 200;
+		active = resp2.statusCode() == 200;
+		return active;
 	}
 
 	public boolean change_mode(Mode target) throws IOException, InterruptedException {
+		if(!active) return false;
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(URI.create(baseAddress + "/xled/v1/led/mode"))
 				.header("X-Auth-Token", getB64Token())
@@ -56,6 +63,7 @@ public class Twinkly {
 	}
 
 	public boolean change_mode(Mode target, int effect_id) throws IOException, InterruptedException {
+		if(!active) return false;
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(URI.create(baseAddress + "/xled/v1/led/mode"))
 				.header("X-Auth-Token", getB64Token())
@@ -67,6 +75,7 @@ public class Twinkly {
 	}
 
 	public Mode getMode() throws IOException, InterruptedException {
+		if(!active) return null;
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(URI.create(baseAddress + "/xled/v1/led/mode"))
 				.header("X-Auth-Token", getB64Token())
@@ -81,8 +90,9 @@ public class Twinkly {
 	}
 
 	public Color getColor() throws IOException, InterruptedException {
+		if(!active) return null;
 		HttpRequest request = HttpRequest.newBuilder()
-				.uri(URI.create(baseAddress + "/xled/v1/led/mode"))
+				.uri(URI.create(baseAddress + "/xled/v1/led/color"))
 				.header("X-Auth-Token", getB64Token())
 				.GET()
 				.build();
@@ -96,14 +106,25 @@ public class Twinkly {
 	}
 
 	public boolean setColor(Color c) throws IOException, InterruptedException {
+		if(!active) return false;
 		HttpRequest request = HttpRequest.newBuilder()
-				.uri(URI.create(baseAddress + "/xled/v1/led/mode"))
+				.uri(URI.create(baseAddress + "/xled/v1/led/color"))
 				.header("X-Auth-Token", getB64Token())
 				.POST(HttpRequest.BodyPublishers.ofString(new JSONObject().put("red", c.getRed()).put("green", c.getGreen()).put("blue", c.getBlue()).toString(4)))
 				.build();
 
 		HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 		return (response.statusCode() == 200) && new JSONObject(response.body()).getInt("code") == 1000;
+	}
+
+	public void logout() throws IOException, InterruptedException {
+		HttpRequest request = HttpRequest.newBuilder()
+				.uri(URI.create(baseAddress + "/xled/v1/verify"))
+				.header("X-Auth-Token", getB64Token())
+				.POST(HttpRequest.BodyPublishers.ofString(new JSONObject().toString(4)))
+				.build();
+
+		HttpResponse<Void> resp2 = client.send(request, HttpResponse.BodyHandlers.discarding());
 	}
 
 	private void setToken(String b64token) {
@@ -123,5 +144,15 @@ public class Twinkly {
 		byte [] ctoken = new byte[32];
 		r.nextBytes(ctoken);
 		return Base64.getEncoder().encodeToString(ctoken);
+	}
+
+	@Override
+	public void close() throws IOException {
+		try {
+			logout();
+		} catch (InterruptedException e) {
+			throw new IOException(e);
+		}
+		client.close();
 	}
 }

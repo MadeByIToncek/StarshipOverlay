@@ -1,5 +1,6 @@
 package cz.iqlandia.iqplanetarium.starshipoverlay;
 
+import cz.iqlandia.iqplanetarium.starshipoverlay.twinkly.Twinkly;
 import cz.iqlandia.iqplanetarium.starshipoverlay.ui.UIController;
 import io.javalin.Javalin;
 import io.javalin.http.ContentType;
@@ -14,15 +15,19 @@ import java.util.HashMap;
 public class StarshipOvelay implements Closeable {
 	private final Javalin app;
 	private final UIController uic;
+	private final Twinkly twinkly;
 	public final Config cfg;
 	private final HashMap<String, CacheData> cache = HashMap.newHashMap(10);
 	private final Logger log = LoggerFactory.getLogger(StarshipOvelay.class);
 
-	public StarshipOvelay() throws IOException, ClassNotFoundException {
+	public StarshipOvelay() throws IOException, ClassNotFoundException, InterruptedException {
 		cfg = createOrLoadConfig();
 		app = Javalin.create();
 
-		uic = new UIController(cfg.t0, cfg);
+		twinkly = new Twinkly("http://192.168.99.174");
+		twinkly.login();
+
+		uic = new UIController(cfg.t0, cfg, twinkly);
 
 		serveStatic("/time", "/time.html", ContentType.TEXT_HTML);
 		serveStatic("/vcr.ttf", "/vcr.ttf", ContentType.FONT_TTF);
@@ -71,18 +76,6 @@ public class StarshipOvelay implements Closeable {
 		log.info("Saved!");
 	}
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		StarshipOvelay so = new StarshipOvelay();
-
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			try {
-				so.close();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}));
-	}
-
 	private void serveStatic(String path, String resPath, ContentType ctype) {
 		app.get(path, ctx -> ctx.async(() -> {
 			if (cache.containsKey(path)) {
@@ -110,8 +103,21 @@ public class StarshipOvelay implements Closeable {
 
 	@Override
 	public void close() throws IOException {
+		twinkly.close();
 		uic.close();
 		app.stop();
 		saveConfig();
+	}
+
+	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+		StarshipOvelay so = new StarshipOvelay();
+
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			try {
+				so.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}));
 	}
 }

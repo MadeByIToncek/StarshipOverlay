@@ -1,0 +1,122 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+<div class="clockbox">
+    <p class="clocktext" id="clock">Loading...</p>
+</div>
+<div class="timebox">
+    <p class="timetext" id="timer">Loading...</p>
+</div>
+
+<style>
+    @font-face {
+        font-family: "vcr-osd-mono";
+        src: url('./vcr.ttf');
+    }
+    
+    .timetext {
+        padding: 20px;
+        background: rgb(0, 163, 224);
+        font-family: "vcr-osd-mono";
+        font-size: 52pt;
+        text-align: right;
+        color: #fff;
+    }
+    
+    .clocktext {
+        padding: 20px;
+        background: rgb(0, 163, 224);
+        font-family: "vcr-osd-mono";
+        font-size: 30pt;
+        color: #fff;
+    }
+    
+    .clockbox {
+        /* to position it in front of the other content */
+        position: absolute;
+        z-index: 10;
+        overflow: hidden;
+        top: -20px;
+        right: 30px;
+        /* to prevent scrollbar appearing */
+    }
+    
+    .timebox {
+        /* to position it in front of the other content */
+        position: absolute;
+        z-index: 10;
+        overflow: hidden;
+        top: 50px;
+        right: 30px;
+        /* to prevent scrollbar appearing */
+    }
+</style>
+
+<script>
+    // Set the date we're counting down to
+    var allowedToRead = true;
+    var target = new Date();
+    var x;
+
+    updateT0Controller();
+    var y = setInterval(updateT0Controller, 5000);
+
+    // Update the count down every 1 second
+
+    function denullify(n) {
+        return String(n).padStart(2, '0');
+    }
+
+    function updateT0Controller() {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                console.log(xmlHttp.responseText);
+                target = new Date(xmlHttp.responseText);
+                if (x == null) x = setInterval(countdown, 100);
+            };
+        }
+        xmlHttp.open("GET", "/api/t0", true); // true for asynchronous 
+        xmlHttp.send(null);
+    }
+
+    function countdown() {
+        // Get today's date and time
+        var now = new Date();
+
+        // Find the distance between now and the count down date
+        var distance = target.getTime() - now.getTime();
+
+        // Time calculations for days, hours, minutes and seconds
+        var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)) + (Math.floor(distance / (1000 * 60 * 60 * 24)) * 24);
+        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+
+        // Display the result in the element with id="demo"
+        if (hours > 0) {
+            document.getElementById("timer").innerHTML = "T- " + denullify(hours) + ":" + denullify(minutes) + ":" + denullify(seconds);
+        } else {
+            document.getElementById("timer").innerHTML = "T+ " + denullify(-hours) + ":" + denullify(-minutes) + ":" + denullify(-seconds);
+        }
+        var cz = convertTZ(now, "Europe/Prague");
+        var tx = convertTZ(now, "America/Chicago");
+        document.getElementById("clock").innerHTML = denullify(cz.getHours()) + ":" + denullify(cz.getMinutes()) + ":" + denullify(cz.getSeconds()) + " CZ // " + denullify(tx.getHours()) + ":" + denullify(tx.getMinutes()) + ":" + denullify(tx.getSeconds()) + " TX";
+    }
+
+    function convertTZ(date, tzString) {
+        return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {
+            timeZone: tzString
+        }));
+    }
+
+    // usage: Asia/Jakarta is GMT+7
+    convertTZ("2012/04/20 10:10:30 +0000", "Asia/Jakarta") // Tue Apr 20 2012 17:10:30 GMT+0700 (Western Indonesia Time)
+
+    // Resulting value is regular Date() object
+    const convertedDate = convertTZ("2012/04/20 10:10:30 +0000", "Asia/Jakarta")
+    convertedDate.getHours(); // 17
+
+    // Bonus: You can also put Date object to first arg
+    const date = new Date()
+    convertTZ(date, "Asia/Jakarta") // current date-time in jakarta.
+</script>
