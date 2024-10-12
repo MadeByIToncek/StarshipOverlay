@@ -1,0 +1,116 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+<div class="slide-in from-right">
+    <div class="slide-in-content">
+        <p class="text" id="timer">Loading...</p>
+    </div>
+</div>
+
+<style>
+    @font-face {
+        font-family: "vcr-osd-mono";
+        src: url('./vcr.ttf');
+    }
+    
+    .text {
+        padding: 20px;
+        background: rgb(0, 163, 224);
+        font-family: "vcr-osd-mono";
+        font-size: 52pt;
+        color: #fff;
+    }
+    
+    .slide-in {
+        /* to position it in front of the other content */
+        position: absolute;
+        z-index: 10;
+        overflow: hidden;
+        /* to prevent scrollbar appearing */
+    }
+    
+    .slide-in.from-left {
+        left: 10px;
+    }
+    
+    .slide-in.from-right {
+        top: -30px;
+        right: 30px;
+    }
+    
+    .slide-in-content {
+        padding: 0px;
+        transition: transform .5s ease;
+        /* our nice transition */
+    }
+    
+    .slide-in.from-left .slide-in-content {
+        transform: translateX(-100%);
+        -webkit-transform: translateX(-100%);
+    }
+    
+    .slide-in.from-right .slide-in-content {
+        transform: translateX(100%);
+        -webkit-transform: translateX(100%);
+    }
+    
+    .slide-in.show .slide-in-content {
+        transform: translateX(0);
+        -webkit-transform: translateX(0);
+    }
+</style>
+
+<script>
+    // Set the date we're counting down to
+    var allowedToRead = true;
+
+    function play() {
+        $('.slide-in').toggleClass('show');
+    }
+
+    function next() {}
+
+    function stop() {
+        $('.slide-in').toggleClass('show');
+    }
+
+    function remove() {}
+
+    function handleError(e) {
+        console.error(e)
+    }
+
+    function handleWarning(w) {
+        console.log(w)
+    }
+
+
+    // Update the count down every 1 second
+    var x = setInterval(function() {
+        // Get today's date and time
+        var now = new Date();
+
+        // Find the distance between now and the count down date
+        var distance = new Date('2024/10/13 08:00:00').getTime() - now.getTime();
+
+        // Time calculations for days, hours, minutes and seconds
+        var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)) + (Math.floor(distance / (1000 * 60 * 60 * 24)) * 24);
+        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+
+        // Display the result in the element with id="demo"
+        document.getElementById("timer").innerHTML = "T- " + denullify(hours) + ":" + denullify(minutes) + ":" + denullify(seconds);
+    }, 1000);
+
+    function denullify(input) {
+        if (input >= 0 && input < 10) {
+            return "0" + input;
+        } else if (input > -10 && input < 0) {
+            return "-0" + (input * -1);
+        } else {
+            return input;
+        }
+    }
+
+    play();
+</script>
