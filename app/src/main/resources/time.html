@@ -98,10 +98,10 @@
 
 
         // Display the result in the element with id="demo"
-        if (hours > 0) {
+        if (distance > 0) {
             document.getElementById("timer").innerHTML = "T- " + denullify(hours) + ":" + denullify(minutes) + ":" + denullify(seconds);
         } else {
-            document.getElementById("timer").innerHTML = "T+ " + denullify(-hours) + ":" + denullify(-minutes) + ":" + denullify(-seconds);
+            document.getElementById("timer").innerHTML = "T+ " + denullify(-hours-25) + ":" + denullify(-minutes-1) + ":" + denullify(-seconds-1);
         }
         var cz = convertTZ(now, "Europe/Prague");
         var tx = convertTZ(now, "America/Chicago");
