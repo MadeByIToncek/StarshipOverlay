@@ -58,6 +58,15 @@ public class UIController implements Closeable {
 		frame.pack();
 		frame.setSize(400, (int) frame.getSize().getHeight());
 		frame.setVisible(true);
+
+
+		try {
+			twinkly.setColor(State.NOMINAL.twinklyColor);
+		} catch (IOException | InterruptedException ex) {
+			//noinspection LoggingSimilarMessage
+			log.warn("Unable to talk to twinkly!");
+		}
+		changeUIColor.accept(State.NOMINAL.uiColor);
 	}
 
 		private JPanel generateColorController() {
