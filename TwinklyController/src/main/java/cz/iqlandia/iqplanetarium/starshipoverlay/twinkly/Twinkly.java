@@ -10,6 +10,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Random;
 
@@ -30,6 +32,7 @@ public class Twinkly implements Closeable {
 		String body = new JSONObject().put("challenge", getChallenge()).toString();
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(URI.create(baseAddress + "/xled/v1/login"))
+				.timeout(Duration.of(1, ChronoUnit.SECONDS))
 				.POST(HttpRequest.BodyPublishers.ofString(body))
 				.build();
 
@@ -118,6 +121,7 @@ public class Twinkly implements Closeable {
 	}
 
 	public void logout() throws IOException, InterruptedException {
+		if(!active) return;
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(URI.create(baseAddress + "/xled/v1/verify"))
 				.header("X-Auth-Token", getB64Token())

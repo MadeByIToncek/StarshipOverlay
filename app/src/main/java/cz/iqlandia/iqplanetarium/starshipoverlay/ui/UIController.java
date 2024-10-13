@@ -5,6 +5,7 @@ import static com.github.weisj.darklaf.LafManager.getPreferredThemeStyle;
 import com.github.weisj.darklaf.theme.DarculaTheme;
 import cz.iqlandia.iqplanetarium.starshipoverlay.Config;
 import cz.iqlandia.iqplanetarium.starshipoverlay.twinkly.Twinkly;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.function.Consumer;
 
 public class UIController implements Closeable {
 	private static final Logger log = LoggerFactory.getLogger(UIController.class);
@@ -31,12 +33,14 @@ public class UIController implements Closeable {
 	private ZonedDateTime t0Time;
 	private final Config cfg;
 	private final Twinkly twinkly;
+	private final Consumer<Color> changeUIColor;
 	private final List<RemAlerts> tRemAlert = new ArrayList<>(2);
 
-	public UIController(ZonedDateTime defaultT0Time, Config cfg, Twinkly twinkly) {
+	public UIController(ZonedDateTime defaultT0Time, Config cfg, Twinkly twinkly, Consumer<Color> changeUIColor) {
 		t0Time = defaultT0Time;
 		this.cfg = cfg;
 		this.twinkly = twinkly;
+		this.changeUIColor = changeUIColor;
 		frame = new JFrame("StarshipOverlay");
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.setResizable(false);
@@ -69,6 +73,7 @@ public class UIController implements Closeable {
 					} catch (IOException | InterruptedException ex) {
 						log.warn("Unable to talk to twinkly!");
 					}
+					changeUIColor.accept(value.uiColor);
 				});
 				state.setBackground(value.uiColor);
 				if(value == State.RUD) {
@@ -114,7 +119,7 @@ public class UIController implements Closeable {
 					Duration d = Duration.between(t0Time, now.plusNanos(cfg.streamOffsetMillis * 1000000));
 					boolean pos = d.isPositive();
 					d = d.abs();
-					tRem.setText((pos?"T+ ":"T- ") + d.toHours() + ":" + d.toMinutesPart() + ":" + d.toSecondsPart());
+					tRem.setText((pos?"T+ ":"T- ") + StringUtils.leftPad(String.valueOf(d.toHours()),2,'0') + ":" + StringUtils.leftPad(String.valueOf(d.toMinutesPart()),2,'0') + ":" + StringUtils.leftPad(String.valueOf(d.toSecondsPart()),2,'0'));
 				} else if (alertRemCycles > 0) {
 					alertRemCycles--;
 				} else if(!tRemAlert.isEmpty()) {

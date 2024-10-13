@@ -1,4 +1,5 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="/colorfade.js"></script>
 
 <div class="clockbox">
     <p class="clocktext" id="clock">Loading...</p>
@@ -55,10 +56,11 @@
     // Set the date we're counting down to
     var allowedToRead = true;
     var target = new Date();
+    var reloadRequired = false;
     var x;
 
     updateT0Controller();
-    var y = setInterval(updateT0Controller, 5000);
+    var y = setInterval(updateT0Controller, 3000);
 
     // Update the count down every 1 second
 
@@ -70,9 +72,12 @@
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.onreadystatechange = function() {
             if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                if (reloadRequired) location.reload();
                 console.log(xmlHttp.responseText);
                 target = new Date(xmlHttp.responseText);
                 if (x == null) x = setInterval(countdown, 100);
+            } else if (xmlHttp.readyState == 4 && xmlHttp.status != 200) {
+                reloadRequired = true;
             };
         }
         xmlHttp.open("GET", "/api/t0", true); // true for asynchronous 
@@ -109,14 +114,22 @@
         }));
     }
 
-    // usage: Asia/Jakarta is GMT+7
-    convertTZ("2012/04/20 10:10:30 +0000", "Asia/Jakarta") // Tue Apr 20 2012 17:10:30 GMT+0700 (Western Indonesia Time)
+    const exampleSocket = new WebSocket(
+        "ws://" + window.location.host + "/ws/color"
+    );
 
-    // Resulting value is regular Date() object
-    const convertedDate = convertTZ("2012/04/20 10:10:30 +0000", "Asia/Jakarta")
-    convertedDate.getHours(); // 17
+    exampleSocket.onmessage = (event) => {
+        var target = [hexToRgb(event.data).r, hexToRgb(event.data).g, hexToRgb(event.data).b];
+        $('.timetext').colorFade(target);
+        $('.clocktext').colorFade(target);
+    };
 
-    // Bonus: You can also put Date object to first arg
-    const date = new Date()
-    convertTZ(date, "Asia/Jakarta") // current date-time in jakarta.
+    function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
 </script>
