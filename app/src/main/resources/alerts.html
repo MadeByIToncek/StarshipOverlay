@@ -1,8 +1,13 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
-<div class="slide-in from-right">
-    <div class="slide-in-content">
-        <p class="text" id="timer">Loading...</p>
+<div class="slide-in from-left">
+    <div class="slide-in-content background">
+        <span class="warning">⚠</span>
+        <div class="div2">
+            <span class="text">START POSUNUT</span>
+            <br>
+            <span class="note">Nové T0: 14:25 CZ // 07:25 TX</span>
+        </div>
     </div>
 </div>
 
@@ -12,12 +17,49 @@
         src: url('./vcr.ttf');
     }
     
-    .text {
-        padding: 20px;
+    @font-face {
+        font-family: "vcr-eas";
+        src: url('./vcr2.ttf');
+    }
+    
+    .div2 {
+        float: left;
+    }
+    
+    .background {
         background: rgb(0, 163, 224);
-        font-family: "vcr-osd-mono";
-        font-size: 52pt;
+        padding-top: 0px;
+        padding-bottom: 8px;
+        padding-left: 16px;
+        padding-right: 24px;
+        overflow: auto;
+    }
+    
+    .warning {
+        font-family: "vcr-eas";
+        font-size: 96pt;
         color: #fff;
+        margin-right: 5px;
+        margin-left: 10px;
+        float: left;
+    }
+    
+    .text {
+        font-family: 'vcr-eas';
+        font-size: 45pt;
+        margin-left: 20px;
+        color: #fff;
+        position: relative;
+        top: 32px;
+    }
+    
+    .note {
+        font-family: 'vcr-osd-mono';
+        font-size: 24pt;
+        margin-left: 24px;
+        color: #fff;
+        position: relative;
+        top: 40px;
     }
     
     .slide-in {
@@ -29,7 +71,8 @@
     }
     
     .slide-in.from-left {
-        left: 10px;
+        left: 30px;
+        top: 30px;
     }
     
     .slide-in.from-right {
@@ -38,7 +81,6 @@
     }
     
     .slide-in-content {
-        padding: 0px;
         transition: transform .5s ease;
         /* our nice transition */
     }
@@ -66,5 +108,13 @@
 
     function stop() {
         $('.slide-in').toggleClass('show');
+    }
+
+    function run() {
+        play();
+
+        setTimeout(() => {
+            stop();
+        }, 5000);
     }
 </script>

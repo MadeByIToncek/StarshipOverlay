@@ -17,5 +17,6 @@
     <modules>
         <module>TwinklyController</module>
         <module>app</module>
+        <module>WeatherStation</module>
     </modules>
 </project>
